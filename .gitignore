@@ -1,1 +1,8 @@
+**/.gradle/
+**/.idea/
+**/.kotlintest/
+**/build/
+**/out/
+*.hprof
+*.iml
 parsek-js/node_modules

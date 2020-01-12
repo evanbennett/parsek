@@ -36,10 +36,26 @@ val End: Parser<Unit> = Terminals.End
 fun CharIn(chars: Iterable<Char>): Parser<Char> = Intrinsics.CharIn(chars)
 fun CharIn(chars: String): Parser<Char> = Intrinsics.CharIn(chars.asIterable())
 fun CharPred(pred: (Char) -> Boolean): Parser<Char> = Intrinsics.CharPred(pred)
-fun WhileCharIn(chars: Iterable<Char>, min: Int = 1): Parser<Unit> = Intrinsics.WhileCharIn(chars, min)
-fun WhileCharIn(chars: String, min: Int = 1): Parser<Unit> = Intrinsics.WhileCharIn(chars.asIterable(), min)
+fun WhileCharIn(chars: Iterable<Char>, min: Int = 1): Parser<List<Char>> = Intrinsics.WhileCharIn(chars, min)
+fun WhileCharIn(chars: String, min: Int = 1): Parser<List<Char>> = Intrinsics.WhileCharIn(chars.asIterable(), min)
 
 fun Parser<Any?>.capture(): Parser<String> = Combinators.Capturing(this)
+
+@JvmName("\$andUU")
+infix fun Parser<Unit>.and(b: Parser<Unit>): Parser<Unit> =
+    Combinators.Seq(this, b).map<Pair<Unit, Unit>, Unit> { Unit }
+
+@JvmName("\$andUA")
+infix fun <A> Parser<Unit>.and(b: Parser<A>): Parser<A> =
+    Combinators.Seq(this, b).map<Pair<Unit, A>, A> { it.second }
+
+@JvmName("\$andAU")
+infix fun <A> Parser<A>.and(b: Parser<Unit>): Parser<A> =
+    Combinators.Seq(this, b).map<Pair<A, Unit>, A> { it.first }
+
+@JvmName("\$andAB")
+infix fun <A, B> Parser<A>.and(b: Parser<B>): Parser<Pair<A, B>> =
+    Combinators.Seq(this, b)
 
 @JvmName("\$timesUU")
 operator fun Parser<Unit>.times(b: Parser<Unit>): Parser<Unit> =
@@ -56,9 +72,11 @@ operator fun <A> Parser<A>.times(b: Parser<Unit>): Parser<A> =
 @JvmName("\$timesAB")
 operator fun <A, B> Parser<A>.times(b: Parser<B>): Parser<Pair<A, B>> = Combinators.Seq(this, b)
 
+infix fun <A> Parser<A>.or(b: Parser<A>): Parser<A> = Combinators.Either(listOf(this, b))
+
 operator fun <A> Parser<A>.plus(b: Parser<A>): Parser<A> = Combinators.Either(listOf(this, b))
 
-fun <A> Parser<A>.not(): Parser<Unit> = Combinators.Not(this)
+operator fun <A> Parser<A>.not(): Parser<Unit> = Combinators.Not(this)
 
 fun <A> NamedParser<A>.log(output: (String) -> Unit = ::println): Parser<A> =
     Combinators.Logged(this, name, output)
@@ -74,6 +92,10 @@ fun Parser<Unit>.rep(min: Int = 0, max: Int = Int.MAX_VALUE, sep: Parser<*> = Te
 fun <A> Parser<A>.rep(min: Int = 0, max: Int = Int.MAX_VALUE, sep: Parser<*> = Terminals.Pass): Parser<List<A>> =
     Combinators.Repeat(this, min, max, sep)
 
+@JvmName("\$optU")
+fun Parser<Unit>.opt(): Parser<Unit> = Combinators.Optional(this).map {  }
+
+@JvmName("\$optA")
 fun <A> Parser<A>.opt(): Parser<A?> = Combinators.Optional(this)
 
 fun <A> Parser<A>.cut(): Parser<A> = Combinators.Cut(this)
@@ -91,6 +113,45 @@ fun <A, B, C, D, E, R> Parser<Pair<Pair<Pair<Pair<A, B>, C>, D>, E>>.map(f: (A, 
     map { p ->
         f(
             p.first.first.first.first,
+            p.first.first.first.second,
+            p.first.first.second,
+            p.first.second,
+            p.second
+        )
+    }
+
+fun <A, B, C, D, E, F, R> Parser<Pair<Pair<Pair<Pair<Pair<A, B>, C>, D>, E>, F>>.map(f: (A, B, C, D, E, F) -> R): Parser<R> =
+    map { p ->
+        f(
+            p.first.first.first.first.first,
+            p.first.first.first.first.second,
+            p.first.first.first.second,
+            p.first.first.second,
+            p.first.second,
+            p.second
+        )
+    }
+
+fun <A, B, C, D, E, F, G, R> Parser<Pair<Pair<Pair<Pair<Pair<Pair<A, B>, C>, D>, E>, F>, G>>.map(f: (A, B, C, D, E, F, G) -> R): Parser<R> =
+    map { p ->
+        f(
+            p.first.first.first.first.first.first,
+            p.first.first.first.first.first.second,
+            p.first.first.first.first.second,
+            p.first.first.first.second,
+            p.first.first.second,
+            p.first.second,
+            p.second
+        )
+    }
+
+fun <A, B, C, D, E, F, G, H, R> Parser<Pair<Pair<Pair<Pair<Pair<Pair<Pair<A, B>, C>, D>, E>, F>, G>, H>>.map(f: (A, B, C, D, E, F, G, H) -> R): Parser<R> =
+    map { p ->
+        f(
+            p.first.first.first.first.first.first.first,
+            p.first.first.first.first.first.first.second,
+            p.first.first.first.first.first.second,
+            p.first.first.first.first.second,
             p.first.first.first.second,
             p.first.first.second,
             p.first.second,

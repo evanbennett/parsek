@@ -29,14 +29,14 @@ object Intrinsics {
     }
 
     // TODO optimize using a BitSet
-    data class WhileCharIn(val chars: Iterable<Char>, val min: Int) : ParserImpl<Unit>() {
+    data class WhileCharIn(val chars: Iterable<Char>, val min: Int) : ParserImpl<List<Char>>() {
         override fun parseRec(ctx: ParserCtx, index: Int): MutableParseResult {
             var curIndex = index
             while (curIndex < ctx.input.length && ctx.input[curIndex] in chars) {
                 curIndex++
             }
             return if (curIndex - index >= min) {
-                succeed(ctx, Unit, curIndex)
+                succeed(ctx, ctx.input.substring(index, curIndex).toList(), curIndex)
             } else {
                 fail(ctx, index)
             }

@@ -77,7 +77,7 @@ object Combinators {
 
         // FIXME: add parentheses to keep correct precedence, e.g. currently jsonExpr is printed as
         // `space * obj + array + string + P("true") + P("false") + P("null") + number * space`
-        override fun toString(): String = "$a * $b"
+        override fun toString(): String = "$a and $b"
     }
 
     data class Either<out A>(val ps: List<Parser<A>>) : ParserImpl<A>() {
@@ -96,7 +96,7 @@ object Combinators {
             return loop(0)
         }
 
-        override fun toString(): String = ps.joinToString(" + ")
+        override fun toString(): String = ps.joinToString(" or ")
     }
 
     /**
