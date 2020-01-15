@@ -36,7 +36,7 @@ class JsonParserTest {
         val jsonExpr: Parser<Js.Val> =
             Rule("jsonExpr") { space * (obj + array + string + `true` + `false` + `null` + `number`) * space }
 
-        val space = Rule("space") { WhileCharIn(" \r\n", min = 0) }
+        val space = Rule("space") { WhileCharIn(" \r\n", min = 0) }.map {}
         val digits = WhileCharIn("0123456789")
         val exponent = CharIn("eE") * CharIn("+-").opt() * digits
         val fractional = P(".") * digits
